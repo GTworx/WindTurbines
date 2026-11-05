@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.eggs/
+*.egg
+venv/
+.venv/
+env/
+
+# BladeRunner runtime outputs
+Logs/
+Runs/
+Wiki/Turbines/
+state_checkpoint.json
+
+# Generated demo input (created by tools/make_demo_turbine.py)
+Turbine_Demo/
+
+# Model weights / heavy artifacts
+*.pt
+*.pth
+*.ckpt
+runs/
+
+# Tooling
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Obsidian (optional, keep if you want the vault in VCS)
+# .obsidian/workspace.json
