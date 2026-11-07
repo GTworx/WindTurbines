@@ -95,9 +95,12 @@ class BladeInspectorAgent(BaseAgent):
         turbine_id: str,
         confidence_threshold: float,
         run_taxonomy: Dict[str, Any],
+        limit: Optional[int] = None,
     ) -> BladeReport:
         blade_id = blade_dir.name
         images = blade_images(blade_dir)
+        if limit is not None and limit > 0:
+            images = images[: int(limit)]
         meta = load_metadata(blade_dir)
         tax = self._taxonomy_snapshot()
         chunk_cfg = self.config.chunking
@@ -192,6 +195,8 @@ class BladeInspectorAgent(BaseAgent):
         turbine_dir: Path,
         confidence_threshold: Optional[float] = None,
         resume: bool = False,
+        blade: Optional[str] = None,
+        limit: Optional[int] = None,
     ) -> TurbineReport:
         turbine_dir = Path(turbine_dir)
         turbine_id = turbine_dir.name
@@ -204,6 +209,16 @@ class BladeInspectorAgent(BaseAgent):
         self.state.reset_run(self.run_id, run_taxonomy["version"])
         turbine = TurbineReport(turbine_id=turbine_id)
         blades = discover_blades(turbine_dir)
+        if blade:
+            selected = [b for b in blades if b.name == blade]
+            if not selected:
+                self.log_error("BLADE_NOT_FOUND", "Requested blade not found",
+                               detail={"blade": blade, "available": [b.name for b in blades]})
+                raise FileNotFoundError(
+                    f"Blade {blade!r} not found under {turbine_dir} "
+                    f"(available: {', '.join(b.name for b in blades)})"
+                )
+            blades = selected
         self.log_info(
             "INSPECT_START",
             "Turbine inspection started",
@@ -214,7 +229,7 @@ class BladeInspectorAgent(BaseAgent):
         )
         for blade_dir in blades:
             turbine.blade_reports.append(
-                self.inspect_blade(blade_dir, turbine_id, threshold, run_taxonomy)
+                self.inspect_blade(blade_dir, turbine_id, threshold, run_taxonomy, limit=limit)
             )
 
         self._persist(turbine)

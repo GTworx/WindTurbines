@@ -1,0 +1,17 @@
+{
+  "backend": "local",
+  "local": {
+    "vlm_model": "Qwen/Qwen2-VL-2B-Instruct",
+    "detector": "yolo",
+    "detector_weights": null,
+    "device": "auto",
+    "max_new_tokens": 256
+  },
+  "chunking": {
+    "images_per_chunk": 4,
+    "max_chunk_tokens": 8000
+  },
+  "inspection": {
+    "confidence_threshold": 0.5
+  }
+}

@@ -68,7 +68,7 @@ def cmd_inspect(args) -> int:
     vision = get_backend(cfg.backend, config=cfg)
     state = CheckpointState(cfg.checkpoint_file)
     agent = BladeInspectorAgent(cfg, vision=vision, run_id=args.run_id, state=state)
-    report = agent.inspect_turbine(Path(args.turbine_dir), confidence_threshold=args.confidence_threshold)
+    report = agent.inspect_turbine(Path(args.turbine_dir), confidence_threshold=args.confidence_threshold, blade=args.blade, limit=args.limit)
     print(json.dumps({"turbine": report.to_dict()}, indent=2, default=str))
     print(f"Results: {agent.run_dir / 'results.json'}")
     return 0
@@ -87,6 +87,8 @@ def cmd_run(args) -> int:
         train=not args.no_train,
         report=not args.no_report,
         resume=args.resume,
+        blade=args.blade,
+        limit=args.limit,
     )
     print(json.dumps(summary, indent=2, default=str))
     artifacts = summary.get("artifacts", {})
@@ -165,6 +167,8 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--confidence-threshold", type=float, default=None)
     sp.add_argument("--backend", choices=["mock", "local"], default=None)
     sp.add_argument("--run-id", default=None)
+    sp.add_argument("--blade", default=None, help="Inspect only this blade (e.g. Blade_A).")
+    sp.add_argument("--limit", type=int, default=None, help="Process at most N images per blade.")
     sp.set_defaults(func=cmd_inspect)
 
     sp = sub.add_parser("run", help="Run the full pipeline (train -> inspect -> report).")
@@ -175,6 +179,8 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--no-train", action="store_true", help="Skip taxonomy build.")
     sp.add_argument("--no-report", action="store_true", help="Skip report generation.")
     sp.add_argument("--resume", action="store_true", help="Reuse cached results if present.")
+    sp.add_argument("--blade", default=None, help="Inspect only this blade (e.g. Blade_A).")
+    sp.add_argument("--limit", type=int, default=None, help="Process at most N images per blade.")
     sp.set_defaults(func=cmd_run)
 
     sp = sub.add_parser("reexamine", help="Re-examine cached images for new defect classes.")

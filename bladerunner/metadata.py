@@ -20,7 +20,10 @@ from .models import MetadataRecord
 
 # canonical key -> list of accepted header aliases (lower-cased, trimmed)
 ALIAS_MAP: Dict[str, List[str]] = {
-    "image_name": ["image_name", "image", "filename", "file_name", "img_name", "file"],
+    "image_name": [
+        "image_name", "image", "filename", "file_name", "img_name", "file",
+        "anonymized_filename", "image_filename", "photo_name",
+    ],
     "timestamp": ["timestamp", "capture_time", "datetime", "captured_at", "time", "date"],
     "distance_from_root_m": [
         "distance_from_root_m",
@@ -34,7 +37,7 @@ ALIAS_MAP: Dict[str, List[str]] = {
     "camera_pitch": ["camera_pitch", "pitch", "camera_angle", "angle"],
     "gps_lat": ["gps_lat", "lat", "latitude"],
     "gps_lon": ["gps_lon", "lon", "longitude"],
-    "altitude_m": ["altitude_m", "altitude", "alt"],
+    "altitude_m": ["altitude_m", "altitude", "alt", "relative_altitude_m", "dji_relative_altitude_m"],
 }
 
 # header alias -> canonical key
@@ -60,8 +63,13 @@ def find_metadata_file(blade_dir: Path) -> Optional[Path]:
 def _to_float(value) -> Optional[float]:
     if value is None:
         return None
+    text = str(value).strip().replace(" ", "")
+    # Handle European-style decimal commas (e.g. "0,0", "148,58") that appear
+    # in semicolon-delimited metadata exports.
+    if "," in text and "." not in text:
+        text = text.replace(",", ".")
     try:
-        f = float(str(value).strip())
+        f = float(text)
         return f if f == f else None  # reject NaN
     except (ValueError, TypeError):
         return None
@@ -72,7 +80,7 @@ def parse_metadata_row(raw: Dict[str, object]) -> MetadataRecord:
     canonical: Dict[str, object] = {}
     extra: Dict[str, object] = {}
     for key, value in raw.items():
-        canon = _HEADER_TO_CANONICAL.get(str(key).strip().lower())
+        canon = _HEADER_TO_CANONICAL.get(str(key).strip().lstrip("\ufeff").lower())
         if canon is None:
             if value not in (None, ""):
                 extra[str(key)] = value
@@ -111,10 +119,15 @@ def load_metadata(blade_dir: Path) -> Dict[str, MetadataRecord]:
         import pandas as pd
     except Exception:  # pragma: no cover - pandas is a core dependency
         return mapping
+    # Auto-detect the delimiter: real exports are often semicolon-delimited
+    # (e.g. DJI) with comma decimals, while our canonical format is comma-delimited.
     try:
-        df = pd.read_csv(md_file)
+        df = pd.read_csv(md_file, sep=None, engine="python")
     except Exception:
-        return mapping
+        try:
+            df = pd.read_csv(md_file, sep=";")
+        except Exception:
+            return mapping
     for row in df.to_dict(orient="records"):
         rec = parse_metadata_row(row)
         if rec.image_name:

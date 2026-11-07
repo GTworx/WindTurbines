@@ -66,6 +66,8 @@ class OrchestratorAgent:
         train: bool = True,
         report: bool = True,
         resume: bool = False,
+        blade: Optional[str] = None,
+        limit: Optional[int] = None,
     ) -> Dict[str, Any]:
         turbine_dir = Path(turbine_dir)
         if self.run_id is None:
@@ -92,7 +94,7 @@ class OrchestratorAgent:
             turbine_report = self._load_report(cached)
         else:
             turbine_report = self.inspector.inspect_turbine(
-                turbine_dir, confidence_threshold=confidence_threshold, resume=resume
+                turbine_dir, confidence_threshold=confidence_threshold, resume=resume, blade=blade, limit=limit
             )
 
         # 3. Reporting.

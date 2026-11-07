@@ -129,6 +129,38 @@
       {
         "path": "C:\\Users\\gokha\\Documents\\GITHUB\\WindTurbines\\Defects\\Typical-damages-to-WTGs-blades.jpg",
         "source": "training"
+      },
+      {
+        "path": "C:\\Users\\gokha\\Documents\\GITHUB\\WindTurbines\\Defects\\11367_2021_1907_Fig1_HTML.png",
+        "source": "training"
+      },
+      {
+        "path": "C:\\Users\\gokha\\Documents\\GITHUB\\WindTurbines\\Defects\\3-Figure5-1.png",
+        "source": "training"
+      },
+      {
+        "path": "C:\\Users\\gokha\\Documents\\GITHUB\\WindTurbines\\Defects\\41597_2026_7455_Fig7_HTML.png",
+        "source": "training"
+      },
+      {
+        "path": "C:\\Users\\gokha\\Documents\\GITHUB\\WindTurbines\\Defects\\6333de831f4a0energies-15-05672-g011.png",
+        "source": "training"
+      },
+      {
+        "path": "C:\\Users\\gokha\\Documents\\GITHUB\\WindTurbines\\Defects\\Different-types-of-blade-damage-2.webp",
+        "source": "training"
+      },
+      {
+        "path": "C:\\Users\\gokha\\Documents\\GITHUB\\WindTurbines\\Defects\\Identification-of-typical-blade-damage.png",
+        "source": "training"
+      },
+      {
+        "path": "C:\\Users\\gokha\\Documents\\GITHUB\\WindTurbines\\Defects\\IMG_0353.jpg",
+        "source": "training"
+      },
+      {
+        "path": "C:\\Users\\gokha\\Documents\\GITHUB\\WindTurbines\\Defects\\Typical-damages-to-WTGs-blades.jpg",
+        "source": "training"
       }
     ],
     "delamination": [
@@ -139,9 +171,17 @@
       {
         "path": "C:\\Users\\gokha\\Documents\\GITHUB\\WindTurbines\\Defects\\delamination.jpg",
         "source": "training"
+      },
+      {
+        "path": "C:\\Users\\gokha\\Documents\\GITHUB\\WindTurbines\\Defects\\delamination.jpg",
+        "source": "training"
       }
     ],
     "lightning_strike": [
+      {
+        "path": "C:\\Users\\gokha\\Documents\\GITHUB\\WindTurbines\\Defects\\lightning-damage-wind-turbine_1.webp",
+        "source": "training"
+      },
       {
         "path": "C:\\Users\\gokha\\Documents\\GITHUB\\WindTurbines\\Defects\\lightning-damage-wind-turbine_1.webp",
         "source": "training"

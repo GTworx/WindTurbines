@@ -59,11 +59,14 @@ class LocalVisionModel(VisionModel):
                 f"{exc}"
             ) from exc
         try:
+            dtype = torch.float16 if device == "cuda" else torch.float32
             self._processor = AutoProcessor.from_pretrained(self.vlm_model, trust_remote_code=True)
             self._vlm = AutoModelForImageTextToText.from_pretrained(
-                self.vlm_model, torch_dtype=torch.float16 if device == "cuda" else torch.float32,
-                device_map=device, trust_remote_code=True,
+                self.vlm_model, dtype=dtype, trust_remote_code=True,
             )
+            if device == "cuda":
+                self._vlm = self._vlm.to("cuda")
+            self._vlm.eval()
         except Exception as exc:  # pragma: no cover
             raise VisionError(f"Failed to load VLM {self.vlm_model!r}: {exc}") from exc
 
@@ -102,28 +105,37 @@ class LocalVisionModel(VisionModel):
             "Respond ONLY with JSON: "
             '{"defect_class": str, "severity": int (1-5), "confidence": float (0-1), "description": str}'
         )
+        import torch
+        from PIL import Image
+
+        im = Image.open(image_path).convert("RGB")
+        # Crop to the detected region when we have one, so the VLM inspects that area.
+        x, y, w, h = (int(v) for v in region)
+        if w > 0 and h > 0:
+            x = max(0, min(x, im.width - 1))
+            y = max(0, min(y, im.height - 1))
+            w = max(1, min(w, im.width - x))
+            h = max(1, min(h, im.height - y))
+            crop = im.crop((x, y, x + w, y + h))
+        else:
+            crop = im
+
         messages = [
             {"role": "user", "content": [
-                {"type": "image", "image": f"file://{Path(image_path).as_posix()}"},
+                {"type": "image"},
                 {"type": "text", "text": prompt},
             ]}
         ]
-        import torch
-
         text = self._processor.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
-        try:
-            from PIL import Image
-
-            image = Image.open(image_path).convert("RGB")
-        except Exception:
-            image = None
-        inputs = self._processor(text=[text], images=image, return_tensors="pt")
+        inputs = self._processor(text=[text], images=[crop], return_tensors="pt")
         inputs = inputs.to(self._vlm.device)
         with torch.no_grad():
             out = self._vlm.generate(**inputs, max_new_tokens=self.max_new_tokens)
         gen = out[:, inputs["input_ids"].shape[1]:]
         raw = self._processor.batch_decode(gen, skip_special_tokens=True)[0]
-        return self._parse_classification(raw, taxonomy, region)
+        # For a cropped region, keep the original full-image bbox.
+        bbox = region if (region and any(region)) else [0, 0, im.width, im.height]
+        return self._parse_classification(raw, taxonomy, bbox)
 
     @staticmethod
     def _parse_classification(raw: str, taxonomy: List[str], region: List[int]) -> _ImageDetection:
